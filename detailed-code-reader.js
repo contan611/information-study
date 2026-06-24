@@ -146,6 +146,15 @@
       const [, left, op, right] = assignment;
       if (op === '=') notes.push(`이 코드에서는 <code>${esc(left)}</code>라는 이름표에 <code>${esc(right)}</code>를 계산한 결과를 보관합니다. 아래 줄에서 <code>${esc(left)}</code>가 다시 나오면 지금 이 줄에서 만든 결과를 꺼내 쓰는 것입니다.`);
       else notes.push(`이 코드에서는 <code>${esc(left)}</code>의 기존 값에 <code>${esc(right)}</code>를 ${op === '+=' ? '더하고' : op === '-=' ? '빼고' : op === '*=' ? '곱하고' : '나누어'}, 새 결과를 다시 <code>${esc(left)}</code>에 저장합니다. 즉 원래 값이 바뀝니다.`);
+      const position = left.match(/^([A-Za-z_]\w*)\[(\d+)\]$/);
+      if (position && Array.isArray(actualState.get(position[1]))) {
+        const before = actualState.get(position[1]);
+        const nextValue = literalValue(right);
+        if (nextValue !== undefined) {
+          const after = [...before]; after[Number(position[2])] = nextValue;
+          notes.push(`실제 값 변화: <code>${esc(position[1])}</code>는 실행 전 <code>${valueLabel(before)}</code>입니다. 그중 ${esc(position[2])}번 칸(사람이 세면 ${Number(position[2]) + 1}번째 항목) <code>"${esc(String(before[Number(position[2])]))}"</code>를 <code>"${esc(String(nextValue))}"</code>로 바꾸므로, 실행 뒤에는 <code>${valueLabel(after)}</code>가 됩니다.`);
+        }
+      }
     }
     const method = t.match(/([A-Za-z_]\w*)\.([A-Za-z_]\w*)\(([^)]*)\)/);
     if (method) {
@@ -164,7 +173,11 @@
       notes.push(`실제 계산: <code>${valueLabel(actualState.get(stringJoin[3]))}</code>의 각 항목 사이에 <code>"${esc(stringJoin[2])}"</code>를 넣어 연결하므로 최종 글자는 <code>"${esc(joined)}"</code>가 됩니다.`);
     }
     const call = t.match(/^print\((.*)\)$/);
-    if (call) notes.push(`이 코드에서 화면에 보이는 값은 <code>${esc(call[1])}</code>입니다. 따라서 출력 문제에서는 이 괄호 안의 이름·계산이 바로 앞줄들에서 어떤 값으로 바뀌었는지 추적하면 답을 구할 수 있습니다.`);
+    if (call) {
+      notes.push(`이 코드에서 화면에 보이는 값은 <code>${esc(call[1])}</code>입니다. 따라서 출력 문제에서는 이 괄호 안의 이름·계산이 바로 앞줄들에서 어떤 값으로 바뀌었는지 추적하면 답을 구할 수 있습니다.`);
+      const printedName = call[1].trim();
+      if (actualState.has(printedName)) notes.push(`실제 출력 계산: 이 줄 직전 <code>${esc(printedName)}</code>에는 <code>${valueLabel(actualState.get(printedName))}</code>가 저장되어 있으므로, 화면에는 바로 <code>${valueLabel(actualState.get(printedName))}</code>가 출력됩니다.`);
+    }
     const loop = t.match(/^for\s+([A-Za-z_]\w*)\s+in\s+range\(([^)]*)\):/);
     if (loop) {
       const [, variable, args] = loop;
