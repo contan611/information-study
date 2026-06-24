@@ -92,9 +92,55 @@
   const terms = (line) => unique((line.match(/__\w+__|[A-Za-z_]\w*/g) || []).filter(t => word[t]));
   const signs = (line) => unique((line.match(/==|!=|>=|<=|\*\*|\/\/|\+=|-=|\*=|\/=|[()\[\]{}.,:=+\-*/%<>#"']/g) || []));
 
+  function literalValue(text) {
+    const t = text.trim();
+    const quoted = t.match(/^(['"])(.*)\1$/);
+    if (quoted) return quoted[2];
+    if (/^-?\d+(?:\.\d+)?$/.test(t)) return Number(t);
+    return undefined;
+  }
+
+  function valuesBefore(lines, until) {
+    const state = new Map();
+    for (let i = 0; i < until; i += 1) {
+      const t = lines[i].trim();
+      let m = t.match(/^([A-Za-z_]\w*)\s*=\s*(.+)$/);
+      if (m) {
+        const [, name, right] = m;
+        const direct = literalValue(right);
+        if (direct !== undefined) { state.set(name, direct); continue; }
+        const split = right.match(/^([A-Za-z_]\w*)\.split\((['"])(.*?)\2\)$/);
+        if (split && typeof state.get(split[1]) === 'string') { state.set(name, state.get(split[1]).split(split[3])); continue; }
+        const join = right.match(/^(['"])(.*?)\1\.join\(([A-Za-z_]\w*)\)$/);
+        if (join && Array.isArray(state.get(join[3]))) { state.set(name, state.get(join[3]).join(join[2])); continue; }
+        const length = right.match(/^len\(([A-Za-z_]\w*)\)$/);
+        if (length && state.has(length[1])) { state.set(name, state.get(length[1]).length); continue; }
+      }
+      m = t.match(/^([A-Za-z_]\w*)\[(\d+)\]\s*=\s*(.+)$/);
+      if (m && Array.isArray(state.get(m[1]))) {
+        const next = [...state.get(m[1])];
+        const value = literalValue(m[3]);
+        if (value !== undefined) { next[Number(m[2])] = value; state.set(m[1], next); }
+      }
+    }
+    return state;
+  }
+
+  function valueLabel(value) {
+    if (typeof value === 'string') return `"${esc(value)}"`;
+    if (Array.isArray(value)) return `[${value.map(x => `"${esc(String(x))}"`).join(', ')}]`;
+    return esc(String(value));
+  }
+
   function codeSpecific(line, allLines, index) {
     const t = line.trim();
     const notes = [];
+    const actualState = valuesBefore(allLines, index);
+    const appearingNames = unique((t.match(/[A-Za-z_]\w*/g) || []).filter(name => actualState.has(name)));
+    if (appearingNames.length) {
+      const actual = appearingNames.map(name => `<code>${esc(name)}</code> = <code>${valueLabel(actualState.get(name))}</code>`).join(', ');
+      notes.push(`이 줄을 실행하기 <b>바로 전</b>, 이 코드 안에서 이미 계산된 실제 값은 ${actual}입니다. 아래 동작은 이 값을 재료로 사용합니다.`);
+    }
     const assignment = t.match(/^([A-Za-z_]\w*(?:\[[^\]]+\])?)\s*(=|\+=|-=|\*=|\/=)\s*(.+)$/);
     if (assignment) {
       const [, left, op, right] = assignment;
@@ -106,6 +152,16 @@
       const [, object, methodName, args] = method;
       const literalArgs = args.trim() ? `괄호 안의 <code>${esc(args)}</code>를 재료로 사용해서` : '추가 재료 없이';
       notes.push(`여기서는 <code>${esc(object)}</code> 안에 이미 들어 있는 값을 대상으로 <code>.${esc(methodName)}()</code> 기능을 실행합니다. 즉 ${literalArgs} <code>${esc(object)}</code>의 내용에서 다음 결과를 만듭니다.`);
+      if (methodName === 'split' && typeof actualState.get(object) === 'string') {
+        const separator = literalValue(args);
+        if (typeof separator === 'string') notes.push(`실제 계산: <code>"${esc(actualState.get(object))}".split("${esc(separator)}")</code>이므로 <code>[${actualState.get(object).split(separator).map(x => `"${esc(x)}"`).join(', ')}]</code>가 됩니다. 이 결과의 위치 번호는 0, 1, 2 순서입니다.`);
+      }
+      if (methodName === 'join' && Array.isArray(actualState.get(args.trim()))) notes.push(`실제 계산: <code>${esc(object)}.join(${esc(args.trim())})</code>은 <code>${valueLabel(actualState.get(args.trim()))}</code>의 항목들을 <code>"${esc(object)}"</code> 사이사이에 넣어 이어 붙입니다.`);
+    }
+    const stringJoin = t.match(/(['"])(.*?)\1\.join\(([A-Za-z_]\w*)\)/);
+    if (stringJoin && Array.isArray(actualState.get(stringJoin[3]))) {
+      const joined = actualState.get(stringJoin[3]).join(stringJoin[2]);
+      notes.push(`실제 계산: <code>${valueLabel(actualState.get(stringJoin[3]))}</code>의 각 항목 사이에 <code>"${esc(stringJoin[2])}"</code>를 넣어 연결하므로 최종 글자는 <code>"${esc(joined)}"</code>가 됩니다.`);
     }
     const call = t.match(/^print\((.*)\)$/);
     if (call) notes.push(`이 코드에서 화면에 보이는 값은 <code>${esc(call[1])}</code>입니다. 따라서 출력 문제에서는 이 괄호 안의 이름·계산이 바로 앞줄들에서 어떤 값으로 바뀌었는지 추적하면 답을 구할 수 있습니다.`);
