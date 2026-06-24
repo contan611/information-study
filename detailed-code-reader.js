@@ -92,7 +92,51 @@
   const terms = (line) => unique((line.match(/__\w+__|[A-Za-z_]\w*/g) || []).filter(t => word[t]));
   const signs = (line) => unique((line.match(/==|!=|>=|<=|\*\*|\/\/|\+=|-=|\*=|\/=|[()\[\]{}.,:=+\-*/%<>#"']/g) || []));
 
-  function explainLine(line, number) {
+  function codeSpecific(line, allLines, index) {
+    const t = line.trim();
+    const notes = [];
+    const assignment = t.match(/^([A-Za-z_]\w*(?:\[[^\]]+\])?)\s*(=|\+=|-=|\*=|\/=)\s*(.+)$/);
+    if (assignment) {
+      const [, left, op, right] = assignment;
+      if (op === '=') notes.push(`이 코드에서는 <code>${esc(left)}</code>라는 이름표에 <code>${esc(right)}</code>를 계산한 결과를 보관합니다. 아래 줄에서 <code>${esc(left)}</code>가 다시 나오면 지금 이 줄에서 만든 결과를 꺼내 쓰는 것입니다.`);
+      else notes.push(`이 코드에서는 <code>${esc(left)}</code>의 기존 값에 <code>${esc(right)}</code>를 ${op === '+=' ? '더하고' : op === '-=' ? '빼고' : op === '*=' ? '곱하고' : '나누어'}, 새 결과를 다시 <code>${esc(left)}</code>에 저장합니다. 즉 원래 값이 바뀝니다.`);
+    }
+    const method = t.match(/([A-Za-z_]\w*)\.([A-Za-z_]\w*)\(([^)]*)\)/);
+    if (method) {
+      const [, object, methodName, args] = method;
+      const literalArgs = args.trim() ? `괄호 안의 <code>${esc(args)}</code>를 재료로 사용해서` : '추가 재료 없이';
+      notes.push(`여기서는 <code>${esc(object)}</code> 안에 이미 들어 있는 값을 대상으로 <code>.${esc(methodName)}()</code> 기능을 실행합니다. 즉 ${literalArgs} <code>${esc(object)}</code>의 내용에서 다음 결과를 만듭니다.`);
+    }
+    const call = t.match(/^print\((.*)\)$/);
+    if (call) notes.push(`이 코드에서 화면에 보이는 값은 <code>${esc(call[1])}</code>입니다. 따라서 출력 문제에서는 이 괄호 안의 이름·계산이 바로 앞줄들에서 어떤 값으로 바뀌었는지 추적하면 답을 구할 수 있습니다.`);
+    const loop = t.match(/^for\s+([A-Za-z_]\w*)\s+in\s+range\(([^)]*)\):/);
+    if (loop) {
+      const [, variable, args] = loop;
+      const nums = args.split(',').map(x => Number(x.trim()));
+      let rangeText = '';
+      if (nums.length === 1 && Number.isFinite(nums[0])) rangeText = `0부터 ${nums[0] - 1}까지, 모두 ${nums[0]}번`;
+      if (nums.length === 2 && nums.every(Number.isFinite)) rangeText = `${nums[0]}부터 ${nums[1] - 1}까지, 모두 ${nums[1] - nums[0]}번`;
+      if (rangeText) notes.push(`이 코드에서는 반복 변수 <code>${esc(variable)}</code>가 ${rangeText} 차례대로 바뀝니다. 매번 아래 들여쓴 줄이 한 번씩 실행되므로, 출력이 그 안에 있다면 같은 횟수만큼 출력됩니다.`);
+    }
+    const pick = t.match(/([A-Za-z_]\w*)\[([^\]]+)\]/);
+    if (pick && !t.startsWith('for ')) {
+      const [, container, position] = pick;
+      if (/^\d+$/.test(position)) notes.push(`이 코드에서는 <code>${esc(container)}</code>에서 위치 번호 <code>${esc(position)}</code>의 항목을 고릅니다. 파이썬은 0부터 세므로 이것은 사람이 세는 ${Number(position) + 1}번째 항목입니다.`);
+      else notes.push(`이 코드에서는 <code>${esc(container)}</code>에서 <code>${esc(position)}</code>가 가리키는 위치 또는 이름표의 값을 고릅니다.`);
+    }
+    if (/\.loc\[/.test(t)) notes.push('이 코드에서는 표에서 행·열의 **이름**을 이용해 정확한 칸을 찾습니다. 괄호가 아니라 대괄호를 쓰는 이유는 함수 호출이 아니라 표의 한 칸을 고르는 동작이기 때문입니다.');
+    if (/\.iloc\[/.test(t)) notes.push('이 코드에서는 표에서 행·열의 **순서 번호**를 이용해 칸을 찾습니다. 첫 행·첫 열의 번호는 모두 0입니다.');
+    if (/open\(/.test(t)) notes.push('이 코드에서는 파일을 열고 그 결과를 변수에 보관합니다. 다음 줄의 read·write는 이 줄에서 열어 둔 파일 변수를 대상으로 실행되어야 합니다.');
+    if (/return\s+/.test(t)) notes.push('이 코드에서는 이 뒤 표현식이 함수의 최종 답이 됩니다. 함수를 호출한 줄에서는 이 값을 받아 변수에 저장하거나 print로 출력할 수 있습니다.');
+    if (/^if\s+/.test(t)) notes.push('이 코드에서는 조건식의 실제 결과가 True일 때만 바로 아래 들여쓴 코드가 실행됩니다. False이면 그 묶음은 건너뛰므로 출력 여부도 달라집니다.');
+    if (!notes.length) {
+      const previous = allLines.slice(0, index).filter(x => x.trim()).at(-1);
+      if (previous) notes.push(`이 줄은 바로 앞의 <code>${esc(previous.trim())}</code>에서 만든 값 또는 정해 둔 규칙을 이어서 사용합니다. 같은 이름이 다시 나오면 앞에서 저장한 값을 뜻합니다.`);
+    }
+    return `<div class="code-context"><b>이 코드 안에서 실제로 하는 일</b><ul>${notes.map(n => `<li>${n}</li>`).join('')}</ul></div>`;
+  }
+
+  function explainLine(line, number, allLines, index) {
     const trimmed = line.trim();
     const bullets = [];
     if (!trimmed) return '';
@@ -113,7 +157,29 @@
     if (/['"][^'"]*['"]/.test(trimmed)) bullets.push('따옴표로 둘러싼 부분은 글자 그대로 다루는 문자열입니다. 숫자 모양이어도 따옴표 안에 있으면 계산용 숫자가 아니라 글자입니다.');
     const termText = terms(trimmed).map(t => `<li><code>${esc(t)}</code> — ${word[t]}</li>`).join('');
     const signText = signs(trimmed).map(s => `<li><code>${esc(s)}</code> — ${symbol[s]}</li>`).join('');
-    return `<details class="character-guide"><summary><b>${number}번째 실행 줄: 글자·기호까지 풀어 보기</b></summary><code class="source-line">${esc(line)}</code><div class="meaning"><b>이 줄 전체의 흐름</b><ul>${bullets.length ? bullets.map(b => `<li>${b}</li>`).join('') : '<li>위에서 만든 값이나 기능을 사용하여 다음 작업을 수행하는 줄입니다. 아래 명령어·기호 설명을 순서대로 읽어 보세요.</li>'}</ul></div>${termText ? `<div class="term-box"><b>이 줄에 나온 명령어·이름</b><ul>${termText}</ul></div>` : ''}${signText ? `<div class="term-box"><b>이 줄에 나온 기호</b><ul>${signText}</ul></div>` : ''}</details>`;
+    return `<details class="character-guide"><summary><b>${number}번째 실행 줄: 글자·기호까지 풀어 보기</b></summary><code class="source-line">${esc(line)}</code>${codeSpecific(line, allLines, index)}<div class="meaning"><b>이 줄 전체의 흐름</b><ul>${bullets.length ? bullets.map(b => `<li>${b}</li>`).join('') : '<li>위에서 만든 값이나 기능을 사용하여 다음 작업을 수행하는 줄입니다. 아래 명령어·기호 설명을 순서대로 읽어 보세요.</li>'}</ul></div>${termText ? `<div class="term-box"><b>이 줄에 나온 명령어·이름</b><ul>${termText}</ul></div>` : ''}${signText ? `<div class="term-box"><b>이 줄에 나온 기호</b><ul>${signText}</ul></div>` : ''}</details>`;
+  }
+
+  function codeOverview(lines) {
+    const assignments = [];
+    const outputs = [];
+    const branches = [];
+    lines.forEach((line, index) => {
+      const t = line.trim();
+      const set = t.match(/^([A-Za-z_]\w*)\s*(=|\+=|-=|\*=|\/=)\s*(.+)$/);
+      if (set) assignments.push({ name: set[1], op: set[2], value: set[3], index });
+      if (/^print\(/.test(t)) outputs.push({ value: t.slice(6, -1), index });
+      if (/^(if|elif|else|for|while)\b/.test(t)) branches.push({ code: t, index });
+    });
+    const latest = new Map();
+    assignments.forEach(x => latest.set(x.name, x));
+    const variableList = [...latest.values()].slice(0, 14).map(x => {
+      const usedLater = lines.slice(x.index + 1).some(l => new RegExp(`\\b${x.name}\\b`).test(l));
+      return `<li><code>${esc(x.name)}</code> — 이 코드의 ${x.index + 1}번째 실행 줄에서 <code>${esc(x.value)}</code> 결과를 ${x.op === '=' ? '처음 저장' : '기존 값에서 바꿔 다시 저장'}합니다.${usedLater ? ` 뒤의 줄에서 <code>${esc(x.name)}</code>를 다시 사용하므로, 이 값이 다음 계산의 재료가 됩니다.` : ' 이 이름은 이후 줄에서 다시 쓰이지 않거나, 여기서 최종 결과에 쓰입니다.'}</li>`;
+    }).join('');
+    const outputList = outputs.map(x => `<li>${x.index + 1}번째 실행 줄의 <code>print(${esc(x.value)})</code>가 실제 화면 출력 지점입니다. 괄호 안 값은 그 전에 실행된 대입·반복·조건문의 결과를 받은 값입니다.</li>`).join('');
+    const branchList = branches.map(x => `<li>${x.index + 1}번째 실행 줄의 <code>${esc(x.code)}</code> 때문에 아래 들여쓴 줄의 실행 횟수 또는 실행 여부가 달라집니다.</li>`).join('');
+    return `<details class="code-roadmap" open><summary><b>이 코드 전체에서 값이 움직이는 순서</b></summary><div class="roadmap-inner"><p>이 부분은 명령어 뜻이 아니라, <b>이 코드 안에서 실제 값이 어떻게 만들어지고 다음 줄로 전달되는지</b>를 정리한 것입니다.</p>${variableList ? `<b>이 코드에서 실제로 만들어지는 변수와 값</b><ul>${variableList}</ul>` : ''}${branchList ? `<b>실행 횟수·실행 여부를 바꾸는 줄</b><ul>${branchList}</ul>` : ''}${outputList ? `<b>출력이 결정되는 줄</b><ul>${outputList}</ul>` : ''}</div></details>`;
   }
 
   function addGuides() {
@@ -121,16 +187,16 @@
       const code = article.querySelector(':scope > pre:not(.out)') || article.querySelector('pre');
       if (!code || article.querySelector('.full-code-guide')) return;
       const lines = code.textContent.replace(/\r/g, '').split('\n').filter(l => l.trim());
-      const detail = lines.map((line, i) => explainLine(line, i + 1)).filter(Boolean).join('');
+      const detail = lines.map((line, i) => explainLine(line, i + 1, lines, i)).filter(Boolean).join('');
       const box = document.createElement('section');
       box.className = 'full-code-guide';
-      box.innerHTML = `<h3>이 코드의 명령어·기호 완전 해설</h3><p>아래를 펼치면 각 실행 줄에서 명령어, 괄호, 대괄호, 점, 따옴표, 대입 기호가 맡는 일을 확인할 수 있습니다. 빈 줄은 실행하지 않으므로 제외했습니다.</p>${detail}`;
+      box.innerHTML = `<h3>이 코드의 명령어·기호 완전 해설</h3><p>아래를 펼치면 각 실행 줄에서 명령어, 괄호, 대괄호, 점, 따옴표, 대입 기호가 맡는 일을 확인할 수 있습니다. 빈 줄은 실행하지 않으므로 제외했습니다.</p>${codeOverview(lines)}${detail}`;
       code.insertAdjacentElement('afterend', box);
     });
   }
 
   const style = document.createElement('style');
-  style.textContent = `.full-code-guide{background:#fff8e7;border:1px solid #e6bd62;border-radius:12px;padding:14px;margin:12px 0}.full-code-guide h3{margin:0 0 6px;color:#6a4700}.full-code-guide p{margin:0 0 8px}.character-guide{background:#fff;border:1px solid #ead6a8;border-radius:9px;margin:8px 0;padding:9px}.character-guide summary{cursor:pointer;color:#573900}.source-line{display:block;background:#17243b;color:#fff;padding:8px;border-radius:6px;margin:8px 0;white-space:pre-wrap}.meaning,.term-box{background:#fffdf7;border-left:4px solid #d79a00;padding:7px 10px;margin:7px 0}.full-code-guide ul{margin:5px 0 0;padding-left:22px}.full-code-guide li{margin:5px 0}.full-code-guide code{font-family:Consolas,monospace}`;
+  style.textContent = `.full-code-guide{background:#fff8e7;border:1px solid #e6bd62;border-radius:12px;padding:14px;margin:12px 0}.full-code-guide h3{margin:0 0 6px;color:#6a4700}.full-code-guide p{margin:0 0 8px}.character-guide,.code-roadmap{background:#fff;border:1px solid #ead6a8;border-radius:9px;margin:8px 0;padding:9px}.character-guide summary,.code-roadmap summary{cursor:pointer;color:#573900}.roadmap-inner{background:#eef9ee;border-left:4px solid #38834a;padding:8px 10px;margin-top:8px}.source-line{display:block;background:#17243b;color:#fff;padding:8px;border-radius:6px;margin:8px 0;white-space:pre-wrap}.code-context{background:#e8f4ff;border-left:4px solid #287fbe;padding:7px 10px;margin:7px 0}.meaning,.term-box{background:#fffdf7;border-left:4px solid #d79a00;padding:7px 10px;margin:7px 0}.full-code-guide ul{margin:5px 0 0;padding-left:22px}.full-code-guide li{margin:5px 0}.full-code-guide code{font-family:Consolas,monospace}`;
   document.head.appendChild(style);
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', addGuides); else addGuides();
 })();
