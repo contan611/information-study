@@ -165,7 +165,7 @@
       steps.push(`<li><b>${index + 1}단계</b> <code>${esc(t)}</code><br>${text}</li>`);
     });
     const check = expected ? `<p class="answer-check"><b>마지막 검산:</b> 위 순서대로 실행한 결과가 원본의 예상 출력 <code>${esc(expected.trim())}</code>와 일치해야 합니다.</p>` : '';
-    return `<details class="worked-path" open><summary><b>이 코드 실제 풀이 과정: 위에서 아래로 값 계산하기</b></summary><p>시험에서 출력값을 구할 때는 아래 단계 순서대로 변수 값을 적어 가면 됩니다. 정의 암기가 아니라, 이 코드에 들어 있는 실제 값을 따라가는 풀이입니다.</p><ol>${steps.join('')}</ol>${check}</details>`;
+    return `<details class="worked-path"><summary><b>이 코드 실제 풀이 과정: 위에서 아래로 값 계산하기</b></summary><p>시험에서 출력값을 구할 때는 아래 단계 순서대로 변수 값을 적어 가면 됩니다. 정의 암기가 아니라, 이 코드에 들어 있는 실제 값을 따라가는 풀이입니다.</p><ol>${steps.join('')}</ol>${check}</details>`;
   }
 
   function codeSpecific(line, allLines, index) {
@@ -284,7 +284,7 @@
     }).join('');
     const outputList = outputs.map(x => `<li>${x.index + 1}번째 실행 줄의 <code>print(${esc(x.value)})</code>가 실제 화면 출력 지점입니다. 괄호 안 값은 그 전에 실행된 대입·반복·조건문의 결과를 받은 값입니다.</li>`).join('');
     const branchList = branches.map(x => `<li>${x.index + 1}번째 실행 줄의 <code>${esc(x.code)}</code> 때문에 아래 들여쓴 줄의 실행 횟수 또는 실행 여부가 달라집니다.</li>`).join('');
-    return `<details class="code-roadmap" open><summary><b>이 코드 전체에서 값이 움직이는 순서</b></summary><div class="roadmap-inner"><p>이 부분은 명령어 뜻이 아니라, <b>이 코드 안에서 실제 값이 어떻게 만들어지고 다음 줄로 전달되는지</b>를 정리한 것입니다.</p>${variableList ? `<b>이 코드에서 실제로 만들어지는 변수와 값</b><ul>${variableList}</ul>` : ''}${branchList ? `<b>실행 횟수·실행 여부를 바꾸는 줄</b><ul>${branchList}</ul>` : ''}${outputList ? `<b>출력이 결정되는 줄</b><ul>${outputList}</ul>` : ''}</div></details>`;
+    return `<details class="code-roadmap"><summary><b>이 코드 전체에서 값이 움직이는 순서</b></summary><div class="roadmap-inner"><p>이 부분은 명령어 뜻이 아니라, <b>이 코드 안에서 실제 값이 어떻게 만들어지고 다음 줄로 전달되는지</b>를 정리한 것입니다.</p>${variableList ? `<b>이 코드에서 실제로 만들어지는 변수와 값</b><ul>${variableList}</ul>` : ''}${branchList ? `<b>실행 횟수·실행 여부를 바꾸는 줄</b><ul>${branchList}</ul>` : ''}${outputList ? `<b>출력이 결정되는 줄</b><ul>${outputList}</ul>` : ''}</div></details>`;
   }
 
   function addGuides() {
