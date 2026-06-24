@@ -132,6 +132,42 @@
     return esc(String(value));
   }
 
+  function equalValue(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
+
+  function workedPath(lines, expected) {
+    const steps = [];
+    lines.forEach((line, index) => {
+      const t = line.trim();
+      if (!t) return;
+      const before = valuesBefore(lines, index);
+      const after = valuesBefore(lines, index + 1);
+      const used = unique((t.match(/[A-Za-z_]\w*/g) || []).filter(n => before.has(n)));
+      const changed = [];
+      [...after.keys()].forEach(name => {
+        if (!before.has(name) || !equalValue(before.get(name), after.get(name))) changed.push(name);
+      });
+      let text = '';
+      if (t.startsWith('#')) text = '주석이므로 계산하거나 출력하지 않습니다. 이 번호는 사람이 코드를 구분하려고 붙인 것입니다.';
+      else if (/^def\s+/.test(t)) text = '함수의 설계만 등록합니다. 아직 함수 안의 계산은 시작하지 않습니다. 아래에서 함수 이름 뒤에 ()가 실제로 호출될 때 실행됩니다.';
+      else if (/^(import|from)\s+/.test(t)) text = '필요한 도구를 가져오는 준비 단계입니다. 이 줄만으로는 최종 출력이 생기지 않습니다.';
+      else if (/^for\s+/.test(t)) {
+        const range = t.match(/range\((\d+)\s*,\s*(\d+)\)/);
+        text = range ? `반복의 시작입니다. 반복 변수는 ${range[1]}부터 ${Number(range[2]) - 1}까지 차례대로 바뀌며, 아래 들여쓴 줄을 모두 ${Number(range[2]) - Number(range[1])}번 실행합니다.` : '반복의 시작입니다. 묶음에서 값을 하나씩 꺼내 아래 들여쓴 줄을 반복 실행합니다.';
+      } else if (/^if\s+/.test(t)) text = '조건을 계산합니다. 결과가 True일 때만 바로 아래 들여쓴 줄로 내려가고, False이면 그 줄들을 건너뜁니다.';
+      else if (/^print\((.*)\)$/.test(t)) {
+        const inside = t.match(/^print\((.*)\)$/)[1].trim();
+        text = before.has(inside) ? `출력 직전 ${inside}의 실제 값은 ${valueLabel(before.get(inside))}입니다. 따라서 print는 이 값을 화면에 그대로 보여 줍니다.` : `print 괄호 안의 ${esc(inside)}를 먼저 계산한 뒤 그 결과를 화면에 보여 줍니다.`;
+      } else if (changed.length) {
+        const changedText = changed.map(name => `${esc(name)} = ${valueLabel(after.get(name))}`).join(', ');
+        const beforeText = used.length ? `실행 전 사용되는 값은 ${used.map(n => `${esc(n)} = ${valueLabel(before.get(n))}`).join(', ')}입니다. ` : '';
+        text = `${beforeText}이 줄을 실행한 뒤 새로 계산되거나 바뀐 실제 값은 ${changedText}입니다.`;
+      } else text = '이 줄은 앞에서 만든 값으로 계산·비교·호출을 수행합니다. 아래의 줄별 상세 해설에서 괄호 안 계산과 기호 역할을 계속 확인하세요.';
+      steps.push(`<li><b>${index + 1}단계</b> <code>${esc(t)}</code><br>${text}</li>`);
+    });
+    const check = expected ? `<p class="answer-check"><b>마지막 검산:</b> 위 순서대로 실행한 결과가 원본의 예상 출력 <code>${esc(expected.trim())}</code>와 일치해야 합니다.</p>` : '';
+    return `<details class="worked-path" open><summary><b>이 코드 실제 풀이 과정: 위에서 아래로 값 계산하기</b></summary><p>시험에서 출력값을 구할 때는 아래 단계 순서대로 변수 값을 적어 가면 됩니다. 정의 암기가 아니라, 이 코드에 들어 있는 실제 값을 따라가는 풀이입니다.</p><ol>${steps.join('')}</ol>${check}</details>`;
+  }
+
   function codeSpecific(line, allLines, index) {
     const t = line.trim();
     const notes = [];
@@ -259,13 +295,14 @@
       const detail = lines.map((line, i) => explainLine(line, i + 1, lines, i)).filter(Boolean).join('');
       const box = document.createElement('section');
       box.className = 'full-code-guide';
-      box.innerHTML = `<h3>이 코드의 명령어·기호 완전 해설</h3><p>아래를 펼치면 각 실행 줄에서 명령어, 괄호, 대괄호, 점, 따옴표, 대입 기호가 맡는 일을 확인할 수 있습니다. 빈 줄은 실행하지 않으므로 제외했습니다.</p>${codeOverview(lines)}${detail}`;
+      const expected = article.querySelector('pre.out')?.textContent || '';
+      box.innerHTML = `<h3>이 코드의 명령어·기호 완전 해설</h3><p>아래를 펼치면 각 실행 줄에서 명령어, 괄호, 대괄호, 점, 따옴표, 대입 기호가 맡는 일을 확인할 수 있습니다. 빈 줄은 실행하지 않으므로 제외했습니다.</p>${workedPath(lines, expected)}${codeOverview(lines)}${detail}`;
       code.insertAdjacentElement('afterend', box);
     });
   }
 
   const style = document.createElement('style');
-  style.textContent = `.full-code-guide{background:#fff8e7;border:1px solid #e6bd62;border-radius:12px;padding:14px;margin:12px 0}.full-code-guide h3{margin:0 0 6px;color:#6a4700}.full-code-guide p{margin:0 0 8px}.character-guide,.code-roadmap{background:#fff;border:1px solid #ead6a8;border-radius:9px;margin:8px 0;padding:9px}.character-guide summary,.code-roadmap summary{cursor:pointer;color:#573900}.roadmap-inner{background:#eef9ee;border-left:4px solid #38834a;padding:8px 10px;margin-top:8px}.source-line{display:block;background:#17243b;color:#fff;padding:8px;border-radius:6px;margin:8px 0;white-space:pre-wrap}.code-context{background:#e8f4ff;border-left:4px solid #287fbe;padding:7px 10px;margin:7px 0}.meaning,.term-box{background:#fffdf7;border-left:4px solid #d79a00;padding:7px 10px;margin:7px 0}.full-code-guide ul{margin:5px 0 0;padding-left:22px}.full-code-guide li{margin:5px 0}.full-code-guide code{font-family:Consolas,monospace}`;
+  style.textContent = `.full-code-guide{background:#fff8e7;border:1px solid #e6bd62;border-radius:12px;padding:14px;margin:12px 0}.full-code-guide h3{margin:0 0 6px;color:#6a4700}.full-code-guide p{margin:0 0 8px}.character-guide,.code-roadmap,.worked-path{background:#fff;border:1px solid #ead6a8;border-radius:9px;margin:8px 0;padding:9px}.character-guide summary,.code-roadmap summary,.worked-path summary{cursor:pointer;color:#573900}.worked-path{border-color:#6aa9dc;background:#f8fcff}.worked-path>p{background:#e8f4ff;border-left:4px solid #287fbe;padding:8px}.worked-path ol{padding-left:28px}.worked-path li{padding:8px;margin:7px 0;background:#fff;border-radius:7px;border:1px solid #d5e7f5}.answer-check{background:#e9f8ec!important;border-left-color:#38834a!important}.roadmap-inner{background:#eef9ee;border-left:4px solid #38834a;padding:8px 10px;margin-top:8px}.source-line{display:block;background:#17243b;color:#fff;padding:8px;border-radius:6px;margin:8px 0;white-space:pre-wrap}.code-context{background:#e8f4ff;border-left:4px solid #287fbe;padding:7px 10px;margin:7px 0}.meaning,.term-box{background:#fffdf7;border-left:4px solid #d79a00;padding:7px 10px;margin:7px 0}.full-code-guide ul{margin:5px 0 0;padding-left:22px}.full-code-guide li{margin:5px 0}.full-code-guide code{font-family:Consolas,monospace}`;
   document.head.appendChild(style);
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', addGuides); else addGuides();
 })();
