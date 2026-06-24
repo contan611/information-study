@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#12345b">
+  <title>정보 학습실</title>
+  <style>
+    :root { --navy:#12345b; --blue:#246fbd; --paper:#fff; --ink:#182437; --soft:#eef5fc; --line:#d6e2f0; }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--ink); background:#f3f7fb; font-family:system-ui,-apple-system,"Malgun Gothic",sans-serif; line-height:1.65; }
+    header { background:linear-gradient(135deg,#102d52,#1c609f); color:white; padding:48px 20px 58px; }
+    .wrap { max-width:1060px; margin:auto; }
+    h1 { margin:0 0 8px; font-size:clamp(2rem,6vw,3.4rem); }
+    header p { margin:0; font-size:1.1rem; opacity:.95; }
+    main { max-width:1060px; margin:-24px auto 0; padding:0 18px 52px; }
+    .notice { background:#fff8d9; border:1px solid #efd57b; border-radius:16px; padding:17px 20px; margin:0 0 22px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(245px,1fr)); gap:18px; }
+    .card { background:var(--paper); border:1px solid var(--line); border-radius:20px; padding:24px; box-shadow:0 5px 18px #12345b10; display:flex; flex-direction:column; min-height:250px; }
+    .num { color:var(--blue); font-weight:800; }
+    h2 { margin:7px 0 10px; font-size:1.5rem; }
+    .card p { margin:0 0 20px; }
+    a.button { display:inline-block; margin-top:auto; text-align:center; text-decoration:none; background:var(--navy); color:white; font-weight:800; border-radius:12px; padding:12px 15px; }
+    a.button:hover { background:var(--blue); }
+    .study { margin-top:26px; background:#fff; border-radius:20px; padding:25px; border:1px solid var(--line); }
+    .study h2 { color:var(--navy); }
+    ul { padding-left:1.25rem; }
+    footer { text-align:center; color:#526377; padding:25px; }
+    @media (max-width:520px) { header { padding:34px 20px 46px; } .card,.study { padding:20px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>정보 학습실</h1>
+      <p>코딩을 처음 보는 사람도, 한 단계씩 이해하며 시험을 준비하는 공간</p>
+    </div>
+  </header>
+  <main>
+    <div class="notice"><strong>학습 방법</strong> — 개념을 읽고 → 예시를 보고 → 문제를 풀고 → 채점 뒤 해설을 확인하세요. 모르는 단어는 그냥 넘기지 말고, 바로 아래 설명부터 읽으면 됩니다.</div>
+    <section class="grid" aria-label="학습 메뉴">
+      <article class="card">
+        <div class="num">01 — 06차시</div>
+        <h2>수업지도안 학습</h2>
+        <p>정보의 표현, 데이터, 알고리즘 등 1~6차시 내용을 차시별로 나눠 정리합니다. 각 차시에는 핵심 설명·연습 문제·자세한 해설이 들어갑니다.</p>
+        <a class="button" href="lessons.html">1~6차시 들어가기</a>
+      </article>
+      <article class="card">
+        <div class="num">10 — 15차시</div>
+        <h2>파이썬 학습</h2>
+        <p>딕셔너리, 함수, 문자열, 파일 입출력, 객체지향, 판다스를 순서대로 배웁니다. 코드의 괄호와 명령어 역할까지 설명합니다.</p>
+        <a class="button" href="python.html">파이썬 들어가기</a>
+      </article>
+      <article class="card">
+        <div class="num">필수 코드</div>
+        <h2>코랩 필수학습코드</h2>
+        <p>코드 한 줄씩, 출력 결과와 그 이유까지 읽는 연습을 합니다. 빈 줄은 설명에서 제외하고 실제 실행 줄만 다룹니다.</p>
+        <a class="button" href="colab.html">코랩 코드 학습</a>
+      </article>
+    </section>
+    <section class="study">
+      <h2>처음이라면 이 순서로</h2>
+      <ol>
+        <li>수업지도안 1차시부터 차례로 개념을 읽기</li>
+        <li>문제를 풀고 <strong>채점하기</strong>를 누르기</li>
+        <li>틀렸다면 <strong>해설 보기</strong>로 이유와 관련 개념 다시 보기</li>
+        <li>그 다음 파이썬·코랩에서 출력 결과를 직접 예상해 보기</li>
+      </ol>
+    </section>
+  </main>
+  <footer>정보 학습실 · 시험 대비용 개인 학습 사이트</footer>
+</body>
+</html>
