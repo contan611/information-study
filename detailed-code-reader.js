@@ -70,6 +70,62 @@
     __init__: '__init__( )는 객체가 만들어질 때 자동으로 실행되는 초기화 함수입니다.'
   };
 
+  Object.assign(word, {
+    split: 'split(구분자)는 문자열 전용 메서드입니다. 이 코드에서는 예를 들어 phone이 "010-5678-1234"라면 phone.split("-")가 하이픈을 기준으로 ["010", "5678", "1234"]라는 리스트를 만듭니다. 원본 문자열 phone 자체를 찢어 바꾸는 것이 아니라, 잘라낸 결과 리스트를 새로 돌려줍니다.',
+    splitlines: 'splitlines()는 긴 문자열을 줄바꿈 기준으로 나누는 문자열 메서드입니다. 이 코드에서는 여러 줄로 된 표나 텍스트를 한 줄씩 처리하기 위해 사용됩니다. 결과는 ["첫째 줄", "둘째 줄", ...]처럼 줄 단위 리스트가 됩니다.',
+    join: 'join(리스트)는 문자열 메서드입니다. "-".join(parts)처럼 쓰면 parts 리스트의 각 글자 사이에 "-"를 끼워 넣어 하나의 문자열로 합칩니다. 이 코드에서는 split으로 나눈 전화번호 조각을 다시 전화번호 모양으로 붙일 때처럼, 리스트 → 문자열 변환 역할을 합니다.',
+    replace: 'replace(찾을값, 바꿀값)는 문자열에서 특정 부분을 다른 글자로 바꾼 새 문자열을 돌려주는 메서드입니다. 이 코드에서는 "<"를 "&lt;"로 바꾸는 것처럼 위험하거나 감춰야 할 글자를 안전한 글자로 치환할 때 사용됩니다. 문자열은 직접 수정되지 않으므로 결과를 변수에 다시 저장해야 합니다.',
+    strip: 'strip()은 문자열 양끝의 공백, 탭, 줄바꿈을 제거하는 메서드입니다. 이 코드에서는 파일이나 여러 줄 문자열을 읽은 뒤 앞뒤에 붙은 불필요한 빈칸을 없애서 비교·분리·출력이 깔끔하게 되도록 만듭니다. 가운데 공백은 지우지 않습니다.',
+    upper: 'upper()는 문자열의 영어 소문자를 대문자로 바꾼 새 문자열을 돌려주는 메서드입니다. 원본 문자열 자체가 바뀌는 것이 아니라 결과를 새로 만들어 줍니다.',
+    lower: 'lower()는 문자열의 영어 대문자를 소문자로 바꾼 새 문자열을 돌려주는 메서드입니다. 대소문자 구분 없이 비교할 때 자주 씁니다.',
+    encode: 'encode()는 문자열을 컴퓨터가 해시나 저장에 사용할 수 있는 바이트 형태로 바꾸는 문자열 메서드입니다. 이 코드에서는 비밀번호 문자열을 sha256에 넣기 전에 "safe1234".encode()처럼 바이트로 바꾸는 준비 단계입니다.',
+    escape: 'html.escape(문자열)는 HTML에서 위험하게 해석될 수 있는 <, >, & 같은 문자를 안전한 표시용 문자로 바꾸는 함수입니다. 이 코드에서는 사용자가 입력한 HTML 태그가 진짜 태그로 실행되지 않고 글자 그대로 보이게 만드는 보호 장치입니다.',
+
+    append: 'append(값)는 리스트 메서드입니다. 리스트 맨 뒤에 값 하나를 추가합니다. 이 코드에서는 factors.append(d)처럼 약수나 소인수분해 결과를 차례대로 모을 때 사용됩니다. append는 리스트 자체를 바꾸며, 새 리스트를 반환하는 명령이 아닙니다.',
+    keys: 'keys()는 딕셔너리 메서드입니다. 딕셔너리에서 왼쪽 이름표, 즉 키들만 꺼내 봅니다. 이 코드에서는 security.keys()처럼 저장된 항목 이름들을 리스트로 만들거나 반복할 때 사용됩니다.',
+    values: 'values()는 딕셔너리 메서드입니다. 딕셔너리에서 오른쪽 값들만 꺼내 봅니다. 이 코드에서는 *d.values()처럼 여러 값을 함수 인수로 펼쳐 넣거나, sum_all(*s.values())처럼 값들의 합계를 구할 때 사용됩니다.',
+    items: 'items()는 딕셔너리 메서드입니다. 키와 값을 한 쌍씩 (키, 값) 형태로 꺼냅니다. 이 코드에서는 sorted(d.items(), key=lambda x:x[1])처럼 점수나 개수 값을 기준으로 정렬하기 위해 사용됩니다.',
+    get: 'get(키, 기본값)는 딕셔너리 메서드입니다. 키가 있으면 해당 값을 돌려주고, 키가 없으면 오류 대신 기본값을 돌려줍니다. 시험에서는 d["x"]와 달리 없는 키에서 프로그램이 멈추지 않는다는 점이 중요합니다.',
+    update: 'update(다른딕셔너리)는 딕셔너리에 여러 키-값을 한 번에 추가하거나 수정하는 메서드입니다. 같은 키가 있으면 새 값으로 덮어씁니다.',
+
+    read: 'read(개수)는 파일 객체 메서드입니다. 열린 파일에서 현재 커서 위치부터 내용을 읽습니다. read(11)이면 11글자 또는 11바이트만 읽고, read()처럼 비우면 남은 내용을 전부 읽습니다. 읽고 나면 파일 커서가 뒤로 이동합니다.',
+    write: 'write(내용)는 파일 객체 메서드입니다. 화면에 보여 주는 print와 달리, 열린 파일 안에 내용을 기록합니다. 이 코드에서는 f.write("안녕하세요")처럼 파일 내용 자체를 만드는 역할입니다. 쓰기 모드 w에서는 기존 내용이 지워질 수 있습니다.',
+    seek: 'seek(위치)는 파일 객체 메서드입니다. 파일을 읽거나 쓸 시작 위치, 즉 커서를 지정한 번호로 옮깁니다. 이 코드에서 f.seek(5)는 “다음 read/write는 5번 위치부터 시작해라”라는 뜻입니다.',
+    tell: 'tell()은 파일 객체 메서드입니다. 현재 파일 커서가 몇 번 위치에 있는지 알려 줍니다. read나 write를 하면 커서가 움직이므로, tell() 출력은 앞에서 얼마나 읽고 썼는지에 따라 달라집니다.',
+    close: 'close()는 파일 객체 메서드입니다. 파일 사용을 끝내고 연결을 닫습니다. with open(...) as f: 구조를 쓰면 블록이 끝날 때 자동으로 닫힙니다.',
+
+    DataFrame: 'pd.DataFrame(데이터)는 Pandas에서 표를 만드는 생성자입니다. 이 코드에서는 딕셔너리의 키가 열 이름이 되고, 리스트 값들이 각 열의 데이터가 됩니다. 예를 들어 {"이름":["A"], "점수":[90]}은 이름 열과 점수 열이 있는 표가 됩니다.',
+    Series: 'pd.Series(데이터)는 Pandas의 한 줄짜리 자료구조입니다. DataFrame이 여러 열짜리 표라면 Series는 열 하나 또는 이름표가 붙은 리스트에 가깝습니다.',
+    describe: 'describe()는 Pandas DataFrame/Series 메서드입니다. 숫자 열의 개수, 평균, 표준편차, 최솟값, 사분위수, 최댓값을 요약합니다. 이 코드에서는 표 전체를 눈으로 다 보지 않고 데이터 분포를 빠르게 확인하는 역할입니다.',
+    groupby: 'groupby(기준열)는 Pandas 메서드입니다. 같은 값을 가진 행끼리 먼저 묶습니다. 그 뒤 ["score"].mean()처럼 특정 열을 고르고 평균·합계·개수를 계산합니다. 즉 groupby 자체가 최종 답을 만드는 게 아니라 “묶기” 단계입니다.',
+    mean: 'mean()은 평균을 구하는 메서드입니다. groupby 뒤에 붙으면 각 그룹별 평균이 되고, Series에 붙으면 그 열 전체 평균이 됩니다.',
+    plot: 'plot()은 선 그래프나 점이 이어진 그래프를 그리는 메서드입니다. 이 코드에서 b.plot(m,t,"o-")는 x축에 m, y축에 t를 놓고 동그라미 점과 선으로 표시합니다.',
+    bar: 'bar(x, y)는 막대그래프를 그리는 메서드입니다. 이 코드에서 a.bar(m,s)는 m 항목마다 s 높이의 막대를 만듭니다.',
+    subplot: 'subplot()은 그래프를 그릴 도화지와 축을 준비하는 함수입니다. 이 코드에서는 a=plt.subplot()처럼 a라는 축 객체를 만든 뒤 a.bar(), a.twinx() 같은 그래프 메서드를 이어 씁니다.',
+    twinx: 'twinx()는 같은 x축을 공유하면서 오른쪽에 y축을 하나 더 만드는 그래프 메서드입니다. 이 코드에서는 판매량과 기온처럼 단위가 다른 두 값을 한 그림에 같이 보여 주기 위해 씁니다.',
+    title: 'title(제목)은 그래프 제목을 붙이는 메서드입니다. 이 코드에서는 plt.title("Sales vs Temp")처럼 그림 위쪽에 제목을 표시합니다.',
+    show: 'show()는 준비한 그래프나 화면을 실제로 보여 주는 메서드입니다. plot, bar, title로 설정만 해 둔 뒤 마지막에 show()가 실행되어야 그림이 화면에 나타납니다.',
+
+    sha256: 'hashlib.sha256(바이트)는 SHA-256 해시 계산기를 만드는 함수입니다. 이 코드에서는 비밀번호 원문을 그대로 저장하지 않고, 되돌리기 어려운 긴 해시값으로 바꾸기 위해 사용됩니다.',
+    hexdigest: 'hexdigest()는 해시 객체 메서드입니다. sha256(... )으로 계산된 결과를 사람이 읽을 수 있는 16진수 문자열로 꺼냅니다. 이 코드에서는 hashed 변수에 저장되는 최종 해시 문자열을 만드는 마지막 단계입니다.',
+    sqrt: 'sqrt()는 제곱근을 구하는 메서드입니다. 이 코드의 Decimal(10005).sqrt()는 10005의 제곱근을 높은 정밀도로 계산합니다.',
+
+    factorize: 'factorize()는 이 학습 코드에서 만든 사용자 정의 메서드입니다. 보통 어떤 수를 소인수들로 나누어 리스트로 돌려주는 역할을 하도록 작성되어 있습니다. 파이썬 기본 내장 메서드가 아니라 class 안에서 직접 만든 기능입니다.',
+    is_prime: 'is_prime()은 이 학습 코드에서 만든 사용자 정의 메서드입니다. 현재 객체가 가진 수 self.n 등이 소수인지 검사해서 True 또는 False를 돌려주는 역할입니다.',
+    print_result: 'print_result()는 이 학습 코드에서 만든 사용자 정의 메서드입니다. 앞에서 계산한 결과를 사람이 읽기 좋은 문장으로 출력하는 역할입니다.',
+    print_chart: 'print_chart()는 이 학습 코드에서 만든 사용자 정의 메서드입니다. 저장된 점수나 항목을 별표·막대·문장 같은 형태로 보기 좋게 출력하는 역할입니다.',
+    run: 'run()은 이 학습 코드에서 만든 사용자 정의 메서드입니다. 객체 안에 들어 있는 여러 단계를 순서대로 실행하는 “시작 버튼” 역할입니다. app.run()이면 app 객체가 가진 전체 작업 흐름을 실행합니다.',
+    total_score: 'total_score()는 이 학습 코드에서 만든 사용자 정의 메서드입니다. 객체 안에 저장된 여러 점수를 합산해 총점을 구하는 역할입니다.',
+    sort_score: 'sort_score()는 이 학습 코드에서 만든 사용자 정의 메서드입니다. 객체 안의 점수 데이터를 기준에 맞게 정렬하는 역할입니다.',
+    a: 'a()는 이 학습 코드의 클래스 안에서 만든 짧은 이름의 사용자 정의 메서드입니다. 코드에 따라 area, add 같은 계산 역할일 수 있으므로, 호출 위치에서 괄호 안 인수와 return/print 내용을 함께 봐야 합니다.',
+    d: 'd()는 이 학습 코드의 클래스 안에서 만든 사용자 정의 메서드입니다. 기본 파이썬 메서드가 아니라, class 내부에서 def d(...)로 정한 동작을 실행합니다.',
+    f: 'f()는 이 학습 코드의 클래스 안에서 만든 사용자 정의 메서드입니다. 보통 factorize처럼 계산 결과 리스트를 돌려주는 짧은 이름으로 쓰였습니다. s.f()라면 s 객체 안의 f 기능을 실행한다는 뜻입니다.',
+    g: 'g()는 이 학습 코드의 클래스 안에서 만든 사용자 정의 메서드입니다. 코드에 따라 get/result 역할로 쓰이며, a.g()처럼 객체 뒤에 붙으면 그 객체가 가진 값을 꺼내거나 계산 결과를 반환합니다.',
+    p: 'p()는 이 학습 코드의 클래스 안에서 만든 사용자 정의 메서드입니다. 보통 prime 판별처럼 True/False를 돌려주는 짧은 이름으로 쓰였습니다. if s.p():처럼 조건문에 들어가면 결과가 참인지 거짓인지에 따라 실행 흐름이 갈립니다.',
+    r: 'r()는 이 학습 코드의 클래스 안에서 만든 사용자 정의 메서드입니다. 보통 result/run처럼 결과를 출력하거나 전체 계산을 실행하는 짧은 이름으로 쓰였습니다. N(...).r()은 N 객체를 만들자마자 r 기능을 실행한다는 뜻입니다.',
+    s: 's()는 이 학습 코드의 클래스 안에서 만든 사용자 정의 메서드입니다. 기본 메서드가 아니라 class 안에서 def s(...)로 만든 기능이며, 보통 score/sum/show 같은 계산 결과를 돌려줍니다.'
+  });
+
   const symbol = {
     '(': '여는 괄호: 함수에 넣을 값(인수)을 시작합니다.', ')': '닫는 괄호: 함수에 넣을 값이 여기서 끝났다는 표시입니다.',
     '[': '여는 대괄호: 리스트·표에서 위치를 고르거나 리스트를 만들기 시작합니다.', ']': '닫는 대괄호: 고르기 또는 리스트 표기가 끝났다는 표시입니다.',
@@ -287,6 +343,33 @@
     return `<details class="code-roadmap"><summary><b>이 코드 전체에서 값이 움직이는 순서</b></summary><div class="roadmap-inner"><p>이 부분은 명령어 뜻이 아니라, <b>이 코드 안에서 실제 값이 어떻게 만들어지고 다음 줄로 전달되는지</b>를 정리한 것입니다.</p>${variableList ? `<b>이 코드에서 실제로 만들어지는 변수와 값</b><ul>${variableList}</ul>` : ''}${branchList ? `<b>실행 횟수·실행 여부를 바꾸는 줄</b><ul>${branchList}</ul>` : ''}${outputList ? `<b>출력이 결정되는 줄</b><ul>${outputList}</ul>` : ''}</div></details>`;
   }
 
+  const methodKinds = [
+    {name:'문자열 메서드', keys:['split','splitlines','join','replace','strip','upper','lower','encode','escape'], desc:'글자 자료에 점(.)을 붙여 사용합니다. 원본 글자를 직접 찢거나 바꾸기보다, 처리된 새 문자열이나 리스트를 돌려주는 경우가 많습니다.'},
+    {name:'리스트 메서드', keys:['append','extend','pop','remove'], desc:'여러 값을 순서대로 담은 리스트에 붙습니다. append처럼 리스트 자체를 바꾸는 메서드가 많으므로 실행 전후 리스트 내용 변화를 봐야 합니다.'},
+    {name:'딕셔너리 메서드', keys:['keys','values','items','get','update'], desc:'키와 값이 짝지어진 자료에 붙습니다. keys는 이름표, values는 값, items는 키와 값을 한 쌍으로 꺼냅니다.'},
+    {name:'파일 메서드', keys:['read','write','seek','tell','close'], desc:'open으로 연 파일 객체에 붙습니다. read/write는 실제 내용 처리, seek/tell은 파일 안에서 현재 읽고 쓰는 위치를 다룹니다.'},
+    {name:'Pandas 표 메서드', keys:['DataFrame','Series','describe','groupby','mean','sort_values','value_counts','read_csv','to_csv','loc','iloc','head','tail','info'], desc:'표 형태 데이터를 만들고 분석하는 기능입니다. DataFrame은 표 만들기, groupby는 묶기, describe는 요약 통계입니다.'},
+    {name:'그래프 메서드', keys:['plot','bar','subplot','twinx','title','xlabel','ylabel','legend','show'], desc:'데이터를 그림으로 보여 주는 기능입니다. plot/bar로 그림 내용을 만들고, title 등으로 꾸민 뒤 show로 화면에 표시합니다.'},
+    {name:'해시·보안 메서드', keys:['sha256','hexdigest','escape'], desc:'비밀번호나 HTML처럼 안전하게 처리해야 하는 값을 다룹니다. sha256은 해시 계산, hexdigest는 해시 결과 꺼내기, escape는 HTML 안전 표시입니다.'},
+    {name:'수학·정밀 계산 메서드', keys:['sqrt','Decimal'], desc:'제곱근이나 정밀한 소수 계산처럼 숫자 계산 정확도가 중요한 부분에서 사용됩니다.'},
+    {name:'사용자 정의 메서드', keys:['factorize','is_prime','print_result','print_chart','run','total_score','sort_score','a','d','f','g','p','r','s'], desc:'파이썬 기본 기능이 아니라 코드 작성자가 class 안에서 def로 직접 만든 메서드입니다. 이름이 짧으면 반드시 class 안의 정의 부분을 찾아 “무엇을 return/print 하는지” 확인해야 합니다.'}
+  ];
+
+  function methodGuide(lines) {
+    const code = lines.join('\n');
+    const dotMethods = [...code.matchAll(/\.([A-Za-z_]\w*)\s*\(/g)].map(m => m[1]);
+    const constructorMethods = [...code.matchAll(/\b(pd\.DataFrame|pd\.Series|hashlib\.sha256|html\.escape|plt\.subplot|Decimal)\s*\(/g)].map(m => m[1].split('.').pop());
+    const found = unique(dotMethods.concat(constructorMethods)).filter(k => word[k]);
+    if (!found.length) return '';
+    const rows = methodKinds.map(kind => {
+      const hits = kind.keys.filter(k => found.includes(k));
+      if (!hits.length) return '';
+      return '<div class="method-kind"><b>' + kind.name + '</b><p>' + kind.desc + '</p><ul>' + hits.map(k => '<li><code>' + esc(k) + '()</code> — ' + word[k] + '</li>').join('') + '</ul></div>';
+    }).filter(Boolean).join('');
+    const all = found.map(k => '<code>' + esc(k) + '()</code>').join(', ');
+    return '<details class="method-guide"><summary><b>이 코드에 나온 메서드 종류와 역할 전체 보기</b></summary><p>이 코드에서 감지된 메서드는 ' + all + '입니다. 점(.) 앞의 대상이 무엇인지 보면 종류가 갈립니다. 예를 들어 <code>phone.split("-")</code>은 phone이라는 문자열에 붙은 문자열 메서드이고, <code>f.read()</code>는 파일 객체에 붙은 파일 메서드입니다.</p>' + rows + '</details>';
+  }
+
   function addGuides() {
     document.querySelectorAll('article').forEach((article) => {
       const code = article.querySelector(':scope > pre:not(.out)') || article.querySelector('pre');
@@ -296,13 +379,14 @@
       const box = document.createElement('section');
       box.className = 'full-code-guide';
       const expected = article.querySelector('pre.out')?.textContent || '';
-      box.innerHTML = `<h3>이 코드의 명령어·기호 완전 해설</h3><p>아래를 펼치면 각 실행 줄에서 명령어, 괄호, 대괄호, 점, 따옴표, 대입 기호가 맡는 일을 확인할 수 있습니다. 빈 줄은 실행하지 않으므로 제외했습니다.</p>${workedPath(lines, expected)}${codeOverview(lines)}${detail}`;
+      box.innerHTML = `<h3>이 코드의 명령어·기호 완전 해설</h3><p>아래를 펼치면 각 실행 줄에서 명령어, 괄호, 대괄호, 점, 따옴표, 대입 기호가 맡는 일을 확인할 수 있습니다. 빈 줄은 실행하지 않으므로 제외했습니다.</p>${methodGuide(lines)}${workedPath(lines, expected)}${codeOverview(lines)}${detail}`;
       code.insertAdjacentElement('afterend', box);
     });
   }
 
   const style = document.createElement('style');
-  style.textContent = `.full-code-guide{background:#fff8e7;border:1px solid #e6bd62;border-radius:12px;padding:14px;margin:12px 0}.full-code-guide h3{margin:0 0 6px;color:#6a4700}.full-code-guide p{margin:0 0 8px}.character-guide,.code-roadmap,.worked-path{background:#fff;border:1px solid #ead6a8;border-radius:9px;margin:8px 0;padding:9px}.character-guide summary,.code-roadmap summary,.worked-path summary{cursor:pointer;color:#573900}.worked-path{border-color:#6aa9dc;background:#f8fcff}.worked-path>p{background:#e8f4ff;border-left:4px solid #287fbe;padding:8px}.worked-path ol{padding-left:28px}.worked-path li{padding:8px;margin:7px 0;background:#fff;border-radius:7px;border:1px solid #d5e7f5}.answer-check{background:#e9f8ec!important;border-left-color:#38834a!important}.roadmap-inner{background:#eef9ee;border-left:4px solid #38834a;padding:8px 10px;margin-top:8px}.source-line{display:block;background:#17243b;color:#fff;padding:8px;border-radius:6px;margin:8px 0;white-space:pre-wrap}.code-context{background:#e8f4ff;border-left:4px solid #287fbe;padding:7px 10px;margin:7px 0}.meaning,.term-box{background:#fffdf7;border-left:4px solid #d79a00;padding:7px 10px;margin:7px 0}.full-code-guide ul{margin:5px 0 0;padding-left:22px}.full-code-guide li{margin:5px 0}.full-code-guide code{font-family:Consolas,monospace}`;
+  style.textContent = `.full-code-guide{background:#fff8e7;border:1px solid #e6bd62;border-radius:12px;padding:14px;margin:12px 0}.full-code-guide h3{margin:0 0 6px;color:#6a4700}.full-code-guide p{margin:0 0 8px}.character-guide,.code-roadmap,.worked-path,.method-guide{background:#fff;border:1px solid #ead6a8;border-radius:9px;margin:8px 0;padding:9px}.character-guide summary,.code-roadmap summary,.worked-path summary,.method-guide summary{cursor:pointer;color:#573900}.method-guide{border-color:#d59a2f;background:#fffaf0}.method-kind{background:#fff;border-left:4px solid #d79a00;padding:9px 11px;margin:9px 0;border-radius:8px}.method-kind p{margin:4px 0}.worked-path{border-color:#6aa9dc;background:#f8fcff}.worked-path>p{background:#e8f4ff;border-left:4px solid #287fbe;padding:8px}.worked-path ol{padding-left:28px}.worked-path li{padding:8px;margin:7px 0;background:#fff;border-radius:7px;border:1px solid #d5e7f5}.answer-check{background:#e9f8ec!important;border-left-color:#38834a!important}.roadmap-inner{background:#eef9ee;border-left:4px solid #38834a;padding:8px 10px;margin-top:8px}.source-line{display:block;background:#17243b;color:#fff;padding:8px;border-radius:6px;margin:8px 0;white-space:pre-wrap}.code-context{background:#e8f4ff;border-left:4px solid #287fbe;padding:7px 10px;margin:7px 0}.meaning,.term-box{background:#fffdf7;border-left:4px solid #d79a00;padding:7px 10px;margin:7px 0}.full-code-guide ul{margin:5px 0 0;padding-left:22px}.full-code-guide li{margin:5px 0}.full-code-guide code{font-family:Consolas,monospace}`;
   document.head.appendChild(style);
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', addGuides); else addGuides();
 })();
+
