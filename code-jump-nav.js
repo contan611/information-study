@@ -40,7 +40,7 @@
     jumpTo(`${group}-${no}`);
   }
 
-  function makeControlBox(className, compact) {
+  function makeControlBox(className, compact, essential = [], diet = []) {
     const box = document.createElement('div');
     box.className = className;
     box.innerHTML = `
@@ -53,16 +53,18 @@
         <input data-jump-number type="number" min="1" inputmode="numeric" placeholder="번호" aria-label="이동할 코드 번호">
         <button type="button" data-jump-go>이동</button>
       </div>
-      ${compact ? '<button type="button" class="jump-top-btn" data-jump-top>번호판 보기</button>' : ''}
+      ${compact ? '<details class="side-number-board"><summary><b>번호판 열기</b></summary><div class="side-board-label">필수학습코드</div><div class="jump-grid side-essential-grid"></div><div class="side-board-label">다이어트 코드</div><div class="jump-grid side-diet-grid"></div></details>' : ''}
     `;
     box.querySelector('[data-jump-go]').addEventListener('click', () => goFromControls(box));
     box.querySelector('[data-jump-number]').addEventListener('keydown', e => {
       if (e.key === 'Enter') goFromControls(box);
     });
-    const top = box.querySelector('[data-jump-top]');
-    if (top) top.addEventListener('click', () => {
-      document.querySelector('.code-jump-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
+    const sideEssential = box.querySelector('.side-essential-grid');
+    const sideDiet = box.querySelector('.side-diet-grid');
+    if (sideEssential && sideDiet) {
+      essential.forEach(item => sideEssential.appendChild(makeButton(item)));
+      diet.forEach(item => sideDiet.appendChild(makeButton(item)));
+    }
     return box;
   }
 
@@ -106,7 +108,7 @@
     essential.forEach(item => panel.querySelector('.essential-grid').appendChild(makeButton(item)));
     diet.forEach(item => panel.querySelector('.diet-grid').appendChild(makeButton(item)));
 
-    document.body.appendChild(makeControlBox('jump-side-panel', true));
+    document.body.appendChild(makeControlBox('jump-side-panel', true, essential, diet));
   }
 
   const style = document.createElement('style');
@@ -122,10 +124,14 @@
     .jump-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:7px;margin-top:10px}
     .jump-grid button{padding:8px 0;border-radius:8px}
     .jump-grid button:hover,.jump-search button:hover,.jump-side-panel button:hover{background:#346bc0}
-    .jump-side-panel{position:fixed;right:14px;top:92px;z-index:20;background:#ffffff;border:2px solid #233d78;border-radius:14px;padding:12px;width:210px;box-shadow:0 8px 28px #0003}
+    .jump-side-panel{position:fixed;right:14px;top:92px;z-index:20;background:#ffffff;border:2px solid #233d78;border-radius:14px;padding:12px;width:240px;max-height:calc(100vh - 120px);overflow:auto;box-shadow:0 8px 28px #0003}
     .jump-side-panel .jump-row{display:grid;grid-template-columns:1fr 70px;gap:6px}
     .jump-side-panel [data-jump-go]{grid-column:1/3}
-    .jump-top-btn{width:100%;margin-top:7px;background:#0b6b5a!important}
+    .side-number-board{margin-top:9px;background:#f6fbff;border:1px solid #c9d9ee;border-radius:10px;padding:8px}
+    .side-number-board summary{cursor:pointer;color:#233d78}
+    .side-number-board .jump-grid{grid-template-columns:repeat(5,1fr);gap:5px;margin:6px 0 10px}
+    .side-number-board .jump-grid button{font-size:.9rem;padding:6px 0}
+    .side-board-label{font-weight:900;color:#233d78;margin-top:8px}
     article.jump-highlight{outline:4px solid #ffbf32;box-shadow:0 0 0 8px #ffbf3230;transition:box-shadow .2s,outline .2s}
     @media(max-width:760px){
       .jump-grid{grid-template-columns:repeat(6,1fr)}
@@ -134,7 +140,8 @@
       .jump-side-panel .jump-box-title{display:none}
       .jump-side-panel .jump-row{grid-template-columns:1fr 72px 58px}
       .jump-side-panel [data-jump-go]{grid-column:auto}
-      .jump-top-btn{display:none}
+      .side-number-board{max-height:45vh;overflow:auto}
+      .side-number-board .jump-grid{grid-template-columns:repeat(7,1fr)}
       body{padding-bottom:86px!important}
     }
   `;
