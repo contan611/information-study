@@ -33,6 +33,39 @@
     return b;
   }
 
+  function goFromControls(root) {
+    const group = root.querySelector('[data-jump-group]').value;
+    const no = Number(root.querySelector('[data-jump-number]').value);
+    if (!no) return;
+    jumpTo(`${group}-${no}`);
+  }
+
+  function makeControlBox(className, compact) {
+    const box = document.createElement('div');
+    box.className = className;
+    box.innerHTML = `
+      <div class="jump-box-title">${compact ? '바로 이동' : '번호 직접 이동'}</div>
+      <div class="jump-row">
+        <select data-jump-group aria-label="코드 묶음 선택">
+          <option value="essential">필수</option>
+          <option value="diet">다이어트</option>
+        </select>
+        <input data-jump-number type="number" min="1" inputmode="numeric" placeholder="번호" aria-label="이동할 코드 번호">
+        <button type="button" data-jump-go>이동</button>
+      </div>
+      ${compact ? '<button type="button" class="jump-top-btn" data-jump-top>번호판 보기</button>' : ''}
+    `;
+    box.querySelector('[data-jump-go]').addEventListener('click', () => goFromControls(box));
+    box.querySelector('[data-jump-number]').addEventListener('keydown', e => {
+      if (e.key === 'Enter') goFromControls(box);
+    });
+    const top = box.querySelector('[data-jump-top]');
+    if (top) top.addEventListener('click', () => {
+      document.querySelector('.code-jump-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    return box;
+  }
+
   function addJumpNav() {
     if (document.querySelector('.code-jump-panel')) return;
     const articles = [...document.querySelectorAll('article')];
@@ -44,7 +77,7 @@
       article.id = id;
       article.dataset.codeGroup = info.group;
       article.dataset.codeNo = String(info.no);
-      article.style.scrollMarginTop = '96px';
+      article.style.scrollMarginTop = '105px';
       return { ...info, id };
     });
 
@@ -55,17 +88,7 @@
     panel.className = 'code-jump-panel';
     panel.innerHTML = `
       <h2>번호 눌러서 해당 코드로 바로 이동</h2>
-      <p>시험 직전에 특정 번호만 다시 볼 때 쓰면 됩니다. 버튼을 누르면 그 코드 위치로 바로 내려갑니다.</p>
-      <div class="jump-search">
-        <label>번호 직접 이동:
-          <select id="jumpGroup">
-            <option value="essential">필수학습코드</option>
-            <option value="diet">다이어트 코드</option>
-          </select>
-          <input id="jumpNumber" type="number" min="1" inputmode="numeric" placeholder="번호">
-          <button type="button" id="jumpGo">이동</button>
-        </label>
-      </div>
+      <p>특정 번호만 다시 볼 때 쓰세요. 위쪽 번호판도 있고, 화면 오른쪽의 떠 있는 상태창에서도 언제든 바로 이동할 수 있습니다.</p>
       <details open>
         <summary><b>필수학습코드 1~${essential.length}</b></summary>
         <div class="jump-grid essential-grid"></div>
@@ -75,34 +98,15 @@
         <div class="jump-grid diet-grid"></div>
       </details>
     `;
+    panel.insertBefore(makeControlBox('jump-search', false), panel.querySelector('details'));
 
     const header = document.querySelector('header');
     (header || document.body).insertAdjacentElement(header ? 'afterend' : 'afterbegin', panel);
 
-    const eGrid = panel.querySelector('.essential-grid');
-    const dGrid = panel.querySelector('.diet-grid');
-    essential.forEach(item => eGrid.appendChild(makeButton(item)));
-    diet.forEach(item => dGrid.appendChild(makeButton(item)));
+    essential.forEach(item => panel.querySelector('.essential-grid').appendChild(makeButton(item)));
+    diet.forEach(item => panel.querySelector('.diet-grid').appendChild(makeButton(item)));
 
-    panel.querySelector('#jumpGo').addEventListener('click', () => {
-      const group = panel.querySelector('#jumpGroup').value;
-      const no = Number(panel.querySelector('#jumpNumber').value);
-      if (!no) return;
-      jumpTo(`${group}-${no}`);
-    });
-    panel.querySelector('#jumpNumber').addEventListener('keydown', e => {
-      if (e.key === 'Enter') panel.querySelector('#jumpGo').click();
-    });
-
-    const small = document.createElement('a');
-    small.href = '#';
-    small.className = 'jump-floating';
-    small.textContent = '번호 이동';
-    small.addEventListener('click', e => {
-      e.preventDefault();
-      panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-    document.body.appendChild(small);
+    document.body.appendChild(makeControlBox('jump-side-panel', true));
   }
 
   const style = document.createElement('style');
@@ -111,14 +115,28 @@
     .code-jump-panel h2{margin:0 0 6px;color:#233d78}
     .code-jump-panel p{margin:4px 0 12px}
     .jump-search{background:#edf6ff;border-left:4px solid #3484c4;padding:10px;margin:10px 0;border-radius:8px}
-    .jump-search select,.jump-search input,.jump-search button{font:inherit;padding:7px 9px;border:1px solid #b9c8dd;border-radius:8px;margin:3px}
-    .jump-search button,.jump-grid button{background:#233d78;color:white;border:0;font-weight:700;cursor:pointer}
+    .jump-box-title{font-weight:900;color:#233d78;margin-bottom:6px}
+    .jump-row{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+    .jump-search select,.jump-search input,.jump-search button,.jump-side-panel select,.jump-side-panel input,.jump-side-panel button{font:inherit;padding:7px 9px;border:1px solid #b9c8dd;border-radius:8px}
+    .jump-search button,.jump-grid button,.jump-side-panel button{background:#233d78;color:white;border:0;font-weight:800;cursor:pointer}
     .jump-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:7px;margin-top:10px}
     .jump-grid button{padding:8px 0;border-radius:8px}
-    .jump-grid button:hover,.jump-search button:hover{background:#346bc0}
-    .jump-floating{position:fixed;right:16px;bottom:70px;z-index:5;background:#0b6b5a;color:white;text-decoration:none;font-weight:800;padding:10px 12px;border-radius:9px;box-shadow:0 4px 14px #0002}
+    .jump-grid button:hover,.jump-search button:hover,.jump-side-panel button:hover{background:#346bc0}
+    .jump-side-panel{position:fixed;right:14px;top:92px;z-index:20;background:#ffffff;border:2px solid #233d78;border-radius:14px;padding:12px;width:210px;box-shadow:0 8px 28px #0003}
+    .jump-side-panel .jump-row{display:grid;grid-template-columns:1fr 70px;gap:6px}
+    .jump-side-panel [data-jump-go]{grid-column:1/3}
+    .jump-top-btn{width:100%;margin-top:7px;background:#0b6b5a!important}
     article.jump-highlight{outline:4px solid #ffbf32;box-shadow:0 0 0 8px #ffbf3230;transition:box-shadow .2s,outline .2s}
-    @media(max-width:640px){.jump-grid{grid-template-columns:repeat(6,1fr)}.jump-floating{right:10px;bottom:76px}.code-jump-panel{padding:13px}.jump-search label{display:block}.jump-search input{width:80px}}
+    @media(max-width:760px){
+      .jump-grid{grid-template-columns:repeat(6,1fr)}
+      .code-jump-panel{padding:13px}
+      .jump-side-panel{left:8px;right:8px;top:auto;bottom:8px;width:auto;padding:9px}
+      .jump-side-panel .jump-box-title{display:none}
+      .jump-side-panel .jump-row{grid-template-columns:1fr 72px 58px}
+      .jump-side-panel [data-jump-go]{grid-column:auto}
+      .jump-top-btn{display:none}
+      body{padding-bottom:86px!important}
+    }
   `;
   document.head.appendChild(style);
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', addJumpNav);
