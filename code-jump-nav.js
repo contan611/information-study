@@ -44,7 +44,7 @@
     const box = document.createElement('div');
     box.className = className + (compact ? ' collapsed' : '');
     box.innerHTML = `
-      ${compact ? '<button type="button" class="jump-toggle" data-jump-toggle>번호 이동 열기</button>' : ''}
+      ${compact ? '<button type="button" class="jump-toggle" data-jump-toggle>번호</button>' : ''}
       <div class="jump-panel-body">
         <div class="jump-box-title">${compact ? '바로 이동' : '번호 직접 이동'}</div>
         <div class="jump-row">
@@ -61,7 +61,7 @@
     const toggle = box.querySelector('[data-jump-toggle]');
     if (toggle) toggle.addEventListener('click', () => {
       box.classList.toggle('collapsed');
-      toggle.textContent = box.classList.contains('collapsed') ? '번호 이동 열기' : '번호 이동 접기';
+      toggle.textContent = box.classList.contains('collapsed') ? '번호' : '접기';
     });
     box.querySelector('[data-jump-go]').addEventListener('click', () => goFromControls(box));
     box.querySelector('[data-jump-number]').addEventListener('keydown', e => {
@@ -132,11 +132,11 @@
     .jump-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:7px;margin-top:10px}
     .jump-grid button{padding:8px 0;border-radius:8px}
     .jump-grid button:hover,.jump-search button:hover,.jump-side-panel button:hover{background:#346bc0}
-    .jump-side-panel{position:fixed;right:14px;top:92px;z-index:20;background:#ffffff;border:2px solid #233d78;border-radius:14px;padding:12px;width:240px;max-height:calc(100vh - 120px);overflow:auto;box-shadow:0 8px 28px #0003}
-    .jump-toggle{width:100%;background:#0b6b5a!important}
-    .jump-side-panel.collapsed{width:auto;padding:8px;border-color:#0b6b5a;background:transparent;box-shadow:none}
+    .jump-side-panel{position:fixed;right:14px;bottom:70px;z-index:20;background:#ffffff;border:2px solid #233d78;border-radius:14px;padding:12px;width:240px;max-height:calc(100vh - 120px);overflow:auto;box-shadow:0 8px 28px #0003}
+    .jump-toggle{background:#233d78!important;color:#fff;border:0;border-radius:8px;padding:10px!important;font-weight:800;min-width:54px}
+    .jump-side-panel.collapsed{width:auto;padding:0;border:0;background:transparent;box-shadow:none}
     .jump-side-panel.collapsed .jump-panel-body{display:none}
-    .jump-side-panel.collapsed .jump-toggle{white-space:nowrap;box-shadow:0 6px 18px #0003}
+    .jump-side-panel.collapsed .jump-toggle{white-space:nowrap;box-shadow:0 4px 12px #0002}
     .jump-side-panel .jump-row{display:grid;grid-template-columns:1fr 70px;gap:6px}
     .jump-side-panel [data-jump-go]{grid-column:1/3}
     .side-number-board{margin-top:9px;background:#f6fbff;border:1px solid #c9d9ee;border-radius:10px;padding:8px}
